@@ -9,7 +9,7 @@ const { connectUser, getUser, disconnectUser } = require('./libs/onlineUsers');
 const app = express()
     .use((req, res) => res.sendFile('server.txt', { root: __dirname }));
 
-const port = 8000;
+const port = process.env.PORT || 8000;
 
 app.use(express());
 app.use(cors());
