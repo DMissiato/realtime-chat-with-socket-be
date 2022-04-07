@@ -6,7 +6,8 @@ const cors = require('cors');
 const { connectUser, getUser, disconnectUser } = require('./libs/onlineUsers');
 
 
-const app = express();
+const app = express()
+    .use((req, res) => res.sendFile('server.txt', { root: __dirname }));
 
 const port = 8000;
 
