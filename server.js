@@ -7,13 +7,22 @@ const { connectUser, getUser, disconnectUser } = require('./libs/onlineUsers');
 
 
 const app = express();
+
 const port = 8000;
 
 app.use(express());
 app.use(cors());
 
+
 const server = app.listen(port, console.log(`Server is running on port n. ${port}`));
-const io = socket(server);
+const io = socket(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST'],
+        allowedHeaders: ['my-custom-header'],
+        credentials: true
+    }
+});
 
 // Socket Connection
 io.on('connection', socket => 
@@ -22,16 +31,17 @@ io.on('connection', socket =>
     socket.on('userConnection', ({ username, lobby }) => 
     {
         const xUser = connectUser(socket.id, username, lobby);
-        console.log('id = ', socket.id);////////////////
+        // Debug
+        console.log('id = ', socket.id);
 
-        socket.join(xUser.room);
+        socket.join(xUser.lobby);
 
         // user entry notification: user
         socket.emit('msg', 
         {
             idUser: xUser.id,
             username: xUser.username,
-            message: `Welcome ${xUser.username}`
+            message: `Welcome, ${xUser.username}!`
         });
         // user entry notification: other users
         socket.broadcast.to(xUser.lobby).emit('msg', 
@@ -44,15 +54,17 @@ io.on('connection', socket =>
     });
 
     // user send message
-    socket.on('chat', textMessage =>
+    socket.on('chat', (textMessage) =>
     {
         const xUser = getUser(socket.id);
+        // Debug
+        console.log('msg = ', `${xUser.username}: `, textMessage);
 
         io.to(xUser.lobby).emit('msg', 
         {
             idUser: xUser.id,
             username: xUser.username,
-            message:  textMessage
+            message: textMessage
         });
     });
 
@@ -60,6 +72,7 @@ io.on('connection', socket =>
     socket.on('disconnect', () =>
     {
         const xUser = disconnectUser(socket.id);
+        console.log('disconnected = ', xUser);
 
         if(xUser)
         {
